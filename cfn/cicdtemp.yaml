@@ -47,7 +47,7 @@ Resources:
     Type: AWS::CloudFormation::Stack
     DependsOn: JenkinsInstance
     Properties:
-      TemplateURL: https://s3.amazonaws.com/nested-buckets/nested/db01qa.yaml
+      TemplateURL: https://s3.amazonaws.com/nested-buckets/nested/db01.yaml
       Parameters:
         KeyName: !Ref KeyPair
         MyIP: !Ref MyIP                  
