@@ -1,0 +1,37 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Resources:
+  RootRole:
+    Type: "AWS::IAM::Role"
+    Properties:
+      RoleName: s3fullaccsesscfn
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - ec2.amazonaws.com
+            Action:
+              - "sts:AssumeRole"
+      Path: /
+      Policies:
+        - PolicyName: s3fullaccsesscfn
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action: "*"
+                Resource: "arn:aws:s3:::*"
+  InstanceProfileForS3:
+    Type: "AWS::IAM::InstanceProfile"
+    Properties:
+      InstanceProfileName: cfnInstanceProfileName
+      Path: /
+      Roles:
+        - !Ref RootRole
+Outputs:
+  S3Details:
+    Description: The Details Of S3 Role
+    Value: !Ref InstanceProfileForS3
+    Export:
+      Name: !Sub "${AWS::StackName}-cfnS3Role"

@@ -1,2 +1,61 @@
 Parameters:
-
+  KeyPair:
+    Type: AWS::EC2::KeyPair::KeyName
+    Description: KeyPair For Root cfn template
+  MyIP:
+    Type: String
+    Description: IP Address
+    Default: 49.36.62.139/32
+Resources:
+  S3RoleForCicd:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: https://s3.amazonaws.com/nested-buckets/nested/
+  JenkinsInstance:
+    Type: AWS::CloudFormation::Stack
+    DependsOn: S3RoleForCicd
+    Properties:
+      TemplateURL: https://s3.amazonaws.com/nested-buckets/nested/
+    Parameters:
+      KeyName: !Ref KeyPair
+      MyIP: !Ref MyIP
+  App01qa:
+    Type: AWS::CloudFormation::Stack
+    DependsOn: JenkinsInstance
+    Properties:
+      TemplateURL: https://s3.amazonaws.com/nested-buckets/nested/
+    Parameters:
+      KeyName: !Ref KeyPair
+      MyIP: !Ref MyIP      
+  NexusServer:
+    Type: AWS::CloudFormation::Stack
+    DependsOn: JenkinsInstance
+    Properties:
+      TemplateURL: https://s3.amazonaws.com/nested-buckets/nested/
+    Parameters:
+      KeyName: !Ref KeyPair
+      MyIP: !Ref MyIP   
+  SonarServer:
+    Type: AWS::CloudFormation::Stack
+    DependsOn: JenkinsInstance
+    Properties:
+      TemplateURL: https://s3.amazonaws.com/nested-buckets/nested/
+    Parameters:
+      KeyName: !Ref KeyPair
+      MyIP: !Ref MyIP
+  Db01qa:
+    Type: AWS::CloudFormation::Stack
+    DependsOn: JenkinsInstance
+    Properties:
+      TemplateURL: https://s3.amazonaws.com/nested-buckets/nested/
+    Parameters:
+      KeyName: !Ref KeyPair
+      MyIP: !Ref MyIP                  
+  WintestServer:
+    Type: AWS::CloudFormation::Stack
+    DependsOn: JenkinsInstance
+    Properties:
+      TemplateURL: https://s3.amazonaws.com/nested-buckets/nested/
+    Parameters:
+      KeyName: !Ref KeyPair
+      MyIP: !Ref MyIP
