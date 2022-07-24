@@ -45,7 +45,7 @@ Resources:
         MyIP: !Ref MyIP
   Db01qa:
     Type: AWS::CloudFormation::Stack
-    DependsOn: JenkinsInstance
+    DependsOn: App01qa
     Properties:
       TemplateURL: https://s3.amazonaws.com/nested-buckets/nested/db01.yaml
       Parameters:
