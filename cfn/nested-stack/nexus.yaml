@@ -16,7 +16,7 @@ Parameters:
     Description: Enter t2.micro, m1.small, or m1.large. Default is t2.micro.
   KeyName: 
     Type: String
-  MYIP:
+  MyIP:
     Type: String
 Mappings: 
   RegionMap: 
@@ -46,7 +46,7 @@ Resources:
           - "-"
           - - "Nexus In"
             - !Ref AWS::Region
-      SecurityGroup: 
+      SecurityGroups: 
         - !Ref NexusSG
       IamInstanceProfile: 
         Fn::ImportValue:
@@ -111,12 +111,12 @@ Resources:
         - IpProtocol: tcp
           FromPort: '22'
           ToPort: '22'
-          CidrIp: !Ref MYIP
+          CidrIp: !Ref MyIP
           
         - IpProtocol: tcp
           FromPort: '8081'
           ToPort: '8081'
-          CidrIp: !Ref MYIP
+          CidrIp: !Ref MyIP
   vproappSGIngress:
    Type: 'AWS::EC2::SecurityGroupIngress'
    Properties:

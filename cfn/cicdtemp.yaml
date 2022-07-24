@@ -5,57 +5,57 @@ Parameters:
   MyIP:
     Type: String
     Description: IP Address
-    Default: 49.36.62.139/32
+    Default: 49.36.62.139/32 
 Resources:
   S3RoleForCicd:
     Type: AWS::CloudFormation::Stack
     Properties:
-      TemplateURL: https://s3.amazonaws.com/nested-buckets/nested/
+      TemplateURL: https://s3.amazonaws.com/nested-buckets/nested/cicds3role.yaml
   JenkinsInstance:
     Type: AWS::CloudFormation::Stack
     DependsOn: S3RoleForCicd
     Properties:
-      TemplateURL: https://s3.amazonaws.com/nested-buckets/nested/
-    Parameters:
-      KeyName: !Ref KeyPair
-      MyIP: !Ref MyIP
+      TemplateURL: https://s3.amazonaws.com/nested-buckets/nested/jenk.yaml
+      Parameters:
+        KeyName: !Ref KeyPair
+        MyIP: !Ref MyIP
   App01qa:
     Type: AWS::CloudFormation::Stack
     DependsOn: JenkinsInstance
     Properties:
-      TemplateURL: https://s3.amazonaws.com/nested-buckets/nested/
-    Parameters:
-      KeyName: !Ref KeyPair
-      MyIP: !Ref MyIP      
+      TemplateURL: https://s3.amazonaws.com/nested-buckets/nested/app01qa.yaml
+      Parameters:
+        KeyName: !Ref KeyPair
+        MyIP: !Ref MyIP      
   NexusServer:
     Type: AWS::CloudFormation::Stack
     DependsOn: JenkinsInstance
     Properties:
-      TemplateURL: https://s3.amazonaws.com/nested-buckets/nested/
-    Parameters:
-      KeyName: !Ref KeyPair
-      MyIP: !Ref MyIP   
+      TemplateURL: https://s3.amazonaws.com/nested-buckets/nested/nexus.yaml
+      Parameters:
+        KeyName: !Ref KeyPair
+        MyIP: !Ref MyIP   
   SonarServer:
     Type: AWS::CloudFormation::Stack
     DependsOn: JenkinsInstance
     Properties:
-      TemplateURL: https://s3.amazonaws.com/nested-buckets/nested/
-    Parameters:
-      KeyName: !Ref KeyPair
-      MyIP: !Ref MyIP
+      TemplateURL: https://s3.amazonaws.com/nested-buckets/nested/sonar.yaml
+      Parameters:
+        KeyName: !Ref KeyPair
+        MyIP: !Ref MyIP
   Db01qa:
     Type: AWS::CloudFormation::Stack
     DependsOn: JenkinsInstance
     Properties:
-      TemplateURL: https://s3.amazonaws.com/nested-buckets/nested/
-    Parameters:
-      KeyName: !Ref KeyPair
-      MyIP: !Ref MyIP                  
+      TemplateURL: https://s3.amazonaws.com/nested-buckets/nested/db01qa.yaml
+      Parameters:
+        KeyName: !Ref KeyPair
+        MyIP: !Ref MyIP                  
   WintestServer:
     Type: AWS::CloudFormation::Stack
     DependsOn: JenkinsInstance
     Properties:
-      TemplateURL: https://s3.amazonaws.com/nested-buckets/nested/
-    Parameters:
-      KeyName: !Ref KeyPair
-      MyIP: !Ref MyIP
+      TemplateURL: https://s3.amazonaws.com/nested-buckets/nested/wintest.yaml
+      Parameters:
+        KeyName: !Ref KeyPair
+        MyIP: !Ref MyIP

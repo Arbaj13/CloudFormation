@@ -34,4 +34,4 @@ Outputs:
     Description: The Details Of S3 Role
     Value: !Ref InstanceProfileForS3
     Export:
-      Name: !Sub "${AWS::StackName}-cfnS3Role"
+      Name: !Sub "cicds3role-cfnS3Role"

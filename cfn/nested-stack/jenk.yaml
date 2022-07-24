@@ -13,12 +13,12 @@ Parameters:
     Description: Enter t2.micro, m1.small, or m1.large. Default is t2.micro.
   KeyName: 
     Type: String
-  MYIP:
+  MyIP:
     Type: String   
 Mappings: 
   RegionMap: 
     us-east-1: 
-      "AMI": "ami-0729e439b6769d6ab"
+      "AMI": "ami-0bcc094591f354be2"
     us-west-1: 
       "AMI": "ami-0bdb828fd58c52235"
     eu-west-1: 
@@ -43,7 +43,7 @@ Resources:
           - "-"
           - - "Jenkins In"
             - !Ref AWS::Region
-      SecurityGroup: 
+      SecurityGroups: 
         - !Ref JenkinsSG
       IamInstanceProfile: 
         Fn::ImportValue:
@@ -71,16 +71,17 @@ Resources:
   JenkinsSG:
     Type: AWS::EC2::SecurityGroup
     Properties:
+      GroupName: JenkinsSG
       GroupDescription: Allow http to client host
       SecurityGroupIngress:
         - IpProtocol: tcp
           FromPort: 8080
           ToPort: 8080
-          CidrIp: !Ref MYIP
+          CidrIp: !Ref MyIP
         - IpProtocol: tcp
           FromPort: 22
           ToPort: 22
-          CidrIp: !Ref MYIP    
+          CidrIp: !Ref MyIP    
 Outputs:
   MyEC2InstancePublicIP:
     Value: !GetAtt JenkInstance.PublicIp
@@ -95,4 +96,4 @@ Outputs:
       - JenkinsSG
       - GroupId
     Export:
-      Name: !Sub "${AWS::StackName}-SGID"
+      Name: !Sub "jenk-SGID"
