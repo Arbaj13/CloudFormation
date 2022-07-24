@@ -44,9 +44,9 @@ Resources:
             - !Ref AWS::Region
       SecurityGroup: 
         - !Ref JenkinsSG
-      IamInstanceProfile:
-        Fn::Importvalue:
-          Fn::Sub: ${RoleTempName}-cfnS3Role      
+      IamInstanceProfile: 
+        Fn::ImportValue:
+            Fn::Sub: "${RoleTempName}-cfnS3Role"    
       UserData:
         "Fn::Base64":
           !Sub | 
