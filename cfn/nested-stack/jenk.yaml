@@ -1,0 +1,97 @@
+Parameters:
+  RoleTempName:
+    Type: String
+    Description: test
+  InstanceTypeParameter:
+    Type: String
+    Default: t2.micro
+    AllowedValues:
+      - t2.micro
+      - m1.small
+      - m1.large
+    Description: Enter t2.micro, m1.small, or m1.large. Default is t2.micro.
+  KeyName: 
+    Type: String
+  MYIP:
+    Type: String   
+Mappings: 
+  RegionMap: 
+    us-east-1: 
+      "AMI": "ami-0729e439b6769d6ab"
+    us-west-1: 
+      "AMI": "ami-0bdb828fd58c52235"
+    eu-west-1: 
+      "AMI": "ami-047bb4163c506cd98"
+    ap-southeast-1: 
+      "AMI": "ami-08569b978cc4dfa10"
+    ap-northeast-1: 
+      "AMI": "ami-06cd52961ce9f0d85"
+Resources:
+  JenkInstance:
+    Type: AWS::EC2::Instance
+    Properties:
+      InstanceType: !Ref InstanceTypeParameter
+      KeyName: !Ref KeyName
+      ImageId: !FindInMap 
+        - RegionMap
+        - !Ref AWS::Region
+        - AMI
+      Tags:
+        - Key: Name
+          Value: !Join
+          - "-"
+          - - "Jenkins In"
+            - !Ref AWS::Region
+      SecurityGroup: 
+        - !Ref JenkinsSG
+      IamInstanceProfile:
+        Fn::Importvalue:
+          Fn::Sub: ${RoleTempName}-cfnS3Role      
+      UserData:
+        "Fn::Base64":
+          !Sub | 
+              #!/bin/bash
+              sudo apt update
+              sudo apt install openjdk-8-jdk -y
+              sudo apt install maven git wget unzip -y
+              sudo apt install awscli -y
+              wget -q -O - https://pkg.jenkins.io/debian-stable/jenkins.io.key | sudo apt-key add -
+              sudo sh -c 'echo deb https://pkg.jenkins.io/debian-stable binary/ > /etc/apt/sources.list.d/jenkins.list'
+              sudo apt-get update
+              sudo apt-get install jenkins -y
+              sleep 10
+              systemctl stop jenkins
+              sleep 10
+              aws s3 cp s3://cicd-data-vprofile/jenkins_cicdjobs.tar.gz /var/lib/
+              cd /var/lib/
+              tar xzvf jenkins_cicdjobs.tar.gz
+              chown jenkins.jenkins /var/lib/jenkins -R
+              reboot 
+  JenkinsSG:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Allow http to client host
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 8080
+          ToPort: 8080
+          CidrIp: !Ref MYIP
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: !Ref MYIP    
+Outputs:
+  MyEC2InstancePublicIP:
+    Value: !GetAtt JenkInstance.PublicIp
+  MyEC2InstancePrivateIP:
+    Value: !GetAtt JenkInstance.PrivateIp
+  MyEC2InstanceID:
+    Value: !Ref JenkInstance
+  JenkSecurityGroupId:
+    Description: Security Group 1 ID
+    Value:
+      Fn::GetAtt:
+      - JenkinsSG
+      - GroupId
+    Export:
+      Name: !Sub "${AWS::StackName}-SGID"
