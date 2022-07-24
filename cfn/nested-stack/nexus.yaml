@@ -1,0 +1,132 @@
+Parameters:
+  RoleTempName:
+    Type: String
+    Description: test
+    Default: cicds3role
+  JenkinsTemp:
+    Type: String
+    Default: jenk
+  InstanceTypeParameter:
+    Type: String
+    Default: t2.micro
+    AllowedValues:
+      - t2.micro
+      - m1.small
+      - m1.large
+    Description: Enter t2.micro, m1.small, or m1.large. Default is t2.micro.
+  KeyName: 
+    Type: String
+  MYIP:
+    Type: String
+Mappings: 
+  RegionMap: 
+    us-east-1: 
+      "AMI": "ami-0cff7528ff583bf9a"
+    us-west-1: 
+      "AMI": "ami-0bdb828fd58c52235"
+    eu-west-1: 
+      "AMI": "ami-047bb4163c506cd98"
+    ap-southeast-1: 
+      "AMI": "ami-08569b978cc4dfa10"
+    ap-northeast-1: 
+      "AMI": "ami-06cd52961ce9f0d85"
+Resources:
+  NexusInstance:
+    Type: AWS::EC2::Instance
+    Properties:
+      InstanceType: !Ref InstanceTypeParameter
+      KeyName: !Ref KeyName
+      ImageId: !FindInMap 
+        - RegionMap
+        - !Ref AWS::Region
+        - AMI
+      Tags:
+        - Key: Name
+          Value: !Join
+          - "-"
+          - - "Nexus In"
+            - !Ref AWS::Region
+      SecurityGroup: 
+        - !Ref NexusSG
+      IamInstanceProfile: 
+        Fn::ImportValue:
+            Fn::Sub: "${RoleTempName}-cfnS3Role"
+      UserData:
+        "Fn::Base64":
+          !Sub | 
+              #!/bin/bash
+              yum install java-1.8.0-openjdk.x86_64 wget -y   
+              yum install epel-release -y
+              yum install awscli -y
+              mkdir -p /opt/nexus/   
+              mkdir -p /tmp/nexus/                           
+              cd /tmp/nexus
+              NEXUSURL="https://download.sonatype.com/nexus/3/latest-unix.tar.gz"
+              wget $NEXUSURL -O nexus.tar.gz
+              EXTOUT=`tar xzvf nexus.tar.gz`
+              NEXUSDIR=`echo $EXTOUT | cut -d '/' -f1`
+              rm -rf /tmp/nexus/nexus.tar.gz
+              rsync -avzh /tmp/nexus/ /opt/nexus/
+              useradd nexus
+              chown -R nexus.nexus /opt/nexus 
+              cat <<EOT>> /etc/systemd/system/nexus.service
+              [Unit]                                                                          
+              Description=nexus service                                                       
+              After=network.target                                                            
+                                                                                
+              [Service]                                                                       
+              Type=forking                                                                    
+              LimitNOFILE=65536                                                               
+              ExecStart=/opt/nexus/$NEXUSDIR/bin/nexus start                                  
+              ExecStop=/opt/nexus/$NEXUSDIR/bin/nexus stop                                    
+              User=nexus                                                                      
+              Restart=on-abort                                                                
+                                                                                
+              [Install]                                                                       
+              WantedBy=multi-user.target                                                      
+
+              EOT
+
+              echo 'run_as_user="nexus"' > /opt/nexus/$NEXUSDIR/bin/nexus.rc
+              systemctl daemon-reload
+              systemctl start nexus
+              systemctl enable nexus
+              aws s3 cp s3://cicd-data-vprofile/nexus-cicd-vpro-pro.tgz  /opt/
+              cd /opt/
+              sleep 5
+              systemctl stop nexus
+              sleep 10
+              tar xzvf nexus-cicd-vpro-pro.tgz 
+              chown nexus.nexus /opt/nexus -R
+              systemctl daemon-reload
+              systemctl start nexus
+              systemctl enable nexus
+              reboot
+  NexusSG:
+    Type: 'AWS::EC2::SecurityGroup'
+    Properties:
+      GroupName: NexusSG
+      GroupDescription: Allow SSH & HTTP from myip
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: '22'
+          ToPort: '22'
+          CidrIp: !Ref MYIP
+          
+        - IpProtocol: tcp
+          FromPort: '8081'
+          ToPort: '8081'
+          CidrIp: !Ref MYIP
+  vproappSGIngress:
+   Type: 'AWS::EC2::SecurityGroupIngress'
+   Properties:
+      GroupId: 
+        Fn::GetAtt:
+        - NexusSG
+        - GroupId
+      IpProtocol: tcp
+      FromPort: 8081
+      ToPort: 8081
+      SourceSecurityGroupId:
+        Fn::ImportValue:
+            Fn::Sub: "${JenkinsTemp}-SGID"

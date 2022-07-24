@@ -2,6 +2,7 @@ Parameters:
   RoleTempName:
     Type: String
     Description: test
+    Default: cicds3role
   InstanceTypeParameter:
     Type: String
     Default: t2.micro
